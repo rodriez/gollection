@@ -87,7 +87,7 @@ func TestCollection_Filter(t *testing.T) {
 			When: func(req interface{}) (interface{}, error) {
 				collection := req.(gollection.Collection)
 
-				return collection.Filter(func(e gollection.Element) bool {
+				return collection.Filter(func(e *gollection.Element) bool {
 					return e.Int()%2 == 0
 				}), nil
 			},
@@ -115,12 +115,12 @@ func TestCollection_Find(t *testing.T) {
 			When: func(req interface{}) (interface{}, error) {
 				collection := req.(gollection.Collection)
 
-				return collection.Find(func(e gollection.Element) bool {
+				return collection.Find(func(e *gollection.Element) bool {
 					return e.Bool()
 				}, 0), nil
 			},
 			Then: func(t *testing.T, resp interface{}, e error) {
-				element := resp.(gollection.Element)
+				element := resp.(*gollection.Element)
 
 				assert.True(t, element.Bool())
 			},
@@ -133,12 +133,12 @@ func TestCollection_Find(t *testing.T) {
 			When: func(req interface{}) (interface{}, error) {
 				collection := req.(gollection.Collection)
 
-				return collection.Find(func(e gollection.Element) bool {
+				return collection.Find(func(e *gollection.Element) bool {
 					return e.Bool()
 				}, 3), nil
 			},
 			Then: func(t *testing.T, resp interface{}, e error) {
-				element := resp.(gollection.Element)
+				element := resp.(*gollection.Element)
 
 				assert.True(t, element.Bool())
 			},
@@ -159,7 +159,7 @@ func TestCollection_ForEach(t *testing.T) {
 				collection := req.(gollection.Collection)
 
 				count := 0
-				collection.ForEach(func(idx int, e gollection.Element) {
+				collection.ForEach(func(idx int, e *gollection.Element) {
 					count++
 				})
 
@@ -207,13 +207,13 @@ func TestCollection_Map(t *testing.T) {
 			When: func(req interface{}) (interface{}, error) {
 				collection := req.(gollection.Collection)
 
-				return collection.Map(func(e gollection.Element) gollection.Element {
+				return collection.Map(func(e *gollection.Element) gollection.Element {
 					if e.Float64() > 0 {
 						return gollection.NewElement(fmt.Sprintf("%v", e.Float64()))
 					} else if e.Int() > 0 {
 						return gollection.NewElement(fmt.Sprintf("%v", e.Int()))
 					} else {
-						return e
+						return *e
 					}
 
 				}), nil
@@ -245,7 +245,7 @@ func TestCollection_Reduce(t *testing.T) {
 			When: func(req interface{}) (interface{}, error) {
 				collection := req.(gollection.Collection)
 
-				return collection.Reduce(func(acc, e gollection.Element) gollection.Element {
+				return collection.Reduce(func(acc, e *gollection.Element) gollection.Element {
 					sum := acc.Float64()
 
 					if e.Type() == gollection.TYPE_INT {
@@ -258,7 +258,7 @@ func TestCollection_Reduce(t *testing.T) {
 				}, gollection.NewFloat64(0)), nil
 			},
 			Then: func(t *testing.T, resp interface{}, e error) {
-				total := resp.(gollection.Element)
+				total := resp.(*gollection.Element)
 
 				assert.Equal(t, float64(210), total.Float64())
 			},
@@ -278,12 +278,12 @@ func TestCollection_ReverseFind(t *testing.T) {
 			When: func(req interface{}) (interface{}, error) {
 				collection := req.(gollection.Collection)
 
-				return collection.ReverseFind(func(e gollection.Element) bool {
+				return collection.ReverseFind(func(e *gollection.Element) bool {
 					return e.Bool()
 				}, 0), nil
 			},
 			Then: func(t *testing.T, resp interface{}, e error) {
-				element := resp.(gollection.Element)
+				element := resp.(*gollection.Element)
 
 				assert.True(t, element.Bool())
 			},
@@ -296,12 +296,12 @@ func TestCollection_ReverseFind(t *testing.T) {
 			When: func(req interface{}) (interface{}, error) {
 				collection := req.(gollection.Collection)
 
-				return collection.ReverseFind(func(e gollection.Element) bool {
+				return collection.ReverseFind(func(e *gollection.Element) bool {
 					return e.Bool()
 				}, 3), nil
 			},
 			Then: func(t *testing.T, resp interface{}, e error) {
-				element := resp.(gollection.Element)
+				element := resp.(*gollection.Element)
 
 				assert.True(t, element.Bool())
 			},
@@ -321,7 +321,7 @@ func TestCollection_Sort(t *testing.T) {
 			When: func(req interface{}) (interface{}, error) {
 				collection := req.(gollection.Collection)
 
-				return collection.Sort(func(e1, e2 gollection.Element) bool {
+				return collection.Sort(func(e1, e2 *gollection.Element) bool {
 					return (e1.Float64() > e2.Float64() && e1.Int() == e2.Int()) || (e1.Int() > e2.Int() && e1.Float64() == e2.Float64())
 				}), nil
 			},

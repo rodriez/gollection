@@ -29,11 +29,11 @@ func (col *gollection) Empty() bool {
 }
 
 //Return a new collection with filtered elements
-func (col *gollection) Filter(criteria func(e Element) bool) Collection {
+func (col *gollection) Filter(criteria func(e *Element) bool) Collection {
 	filtered := gollection{}
 
 	for _, e := range *col {
-		if criteria(e) {
+		if criteria(&e) {
 			filtered = append(filtered, e)
 		}
 	}
@@ -42,26 +42,26 @@ func (col *gollection) Filter(criteria func(e Element) bool) Collection {
 }
 
 //Search an element in the collection
-func (col *gollection) Find(criteria func(Element) bool, offset int) Element {
+func (col *gollection) Find(criteria func(*Element) bool, offset int) *Element {
 	for i := offset; i < col.Length(); i++ {
 		if criteria(col.Get(i)) {
 			return col.Get(i)
 		}
 	}
 
-	return Element{}
+	return nil
 }
 
 //Execute a funcion to each element of the collection
-func (col *gollection) ForEach(fn func(int, Element)) {
+func (col *gollection) ForEach(fn func(int, *Element)) {
 	for i, e := range *col {
-		fn(i, e)
+		fn(i, &e)
 	}
 }
 
 //Return the element corresponding to the index value
-func (col *gollection) Get(i int) Element {
-	return (*col)[i]
+func (col *gollection) Get(i int) *Element {
+	return (&(*col)[i])
 }
 
 //Return the amount of elements of the collection
@@ -70,38 +70,58 @@ func (col *gollection) Length() int {
 }
 
 //Return a new collection with all the elements converted
-func (col *gollection) Map(converter func(e Element) Element) Collection {
+func (col *gollection) Map(converter func(e *Element) Element) Collection {
 	mapped := gollection{}
 
 	for _, e := range *col {
-		mapped = append(mapped, converter(e))
+		mapped = append(mapped, converter(&e))
 	}
 
 	return &mapped
 }
 
-//Reduce the collection to one value
-func (col *gollection) Reduce(reductor func(acc Element, e Element) Element, startingValue Element) Element {
-	for _, e := range *col {
-		startingValue = reductor(startingValue, e)
+//Return the next element corresponding to the index value
+//if the index not exist return nil
+func (col *gollection) Next(i int) *Element {
+	if nextIdx := i + 1; nextIdx >= 0 && nextIdx <= col.Length()-1 {
+		return col.Get(nextIdx)
 	}
 
-	return startingValue
+	return nil
+}
+
+//Return the previous element corresponding to the index value
+//if the index not exist return nil
+func (col *gollection) Prev(i int) *Element {
+	if prevIdx := i - 1; prevIdx >= 0 && prevIdx <= col.Length()-1 {
+		return col.Get(prevIdx)
+	}
+
+	return nil
+}
+
+//Reduce the collection to one value
+func (col *gollection) Reduce(reductor func(acc *Element, e *Element) Element, startingValue Element) *Element {
+	for _, e := range *col {
+		startingValue = reductor(&startingValue, &e)
+	}
+
+	return &startingValue
 }
 
 //Search an element in the collection in the opposite direction to Find
-func (col *gollection) ReverseFind(criteria func(Element) bool, offset int) Element {
+func (col *gollection) ReverseFind(criteria func(*Element) bool, offset int) *Element {
 	for i := (col.Length() - 1) - offset; i >= 0; i-- {
 		if criteria(col.Get(i)) {
 			return col.Get(i)
 		}
 	}
 
-	return Element{}
+	return nil
 }
 
 //Return a new collection with all the elements ordered
-func (col *gollection) Sort(criteria func(e1 Element, e2 Element) bool) Collection {
+func (col *gollection) Sort(criteria func(e1 *Element, e2 *Element) bool) Collection {
 	sort.Slice(*col, func(i, j int) bool {
 		return criteria(col.Get(i), col.Get(j))
 	})
