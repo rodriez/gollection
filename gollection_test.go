@@ -78,31 +78,27 @@ func TestCollection_Empty(t *testing.T) {
 }
 
 func TestCollection_Filter(t *testing.T) {
-	testCases := []runnest.TestCase{
-		{
-			Name: "Given a collection with integers When filter odd numbers Then get a new collection with all even integers",
-			Given: func() interface{} {
-				return gollection.NewCollection(50, 53, 71, 2, 4, 5)
-			},
-			When: func(req interface{}) (interface{}, error) {
-				collection := req.(gollection.Collection)
-
-				return collection.Filter(func(e *gollection.Element) bool {
-					return e.Int()%2 == 0
-				}), nil
-			},
-			Then: func(t *testing.T, resp interface{}, e error) {
-				collection := resp.(gollection.Collection)
-
-				assert.False(t, collection.Empty())
-				assert.Equal(t, 50, collection.Get(0).Int())
-				assert.Equal(t, 2, collection.Get(1).Int())
-				assert.Equal(t, 4, collection.Get(2).Int())
-			},
+	runnest.TestCase{
+		Name: "Given a collection with integers When filter odd numbers Then get a new collection with all even integers",
+		Given: func() interface{} {
+			return gollection.NewCollection(50, 53, 71, 2, 4, 5)
 		},
-	}
+		When: func(req interface{}) (interface{}, error) {
+			collection := req.(gollection.Collection)
 
-	runnest.NewRunest(t).Run(testCases)
+			return collection.Filter(func(e *gollection.Element) bool {
+				return e.Int()%2 == 0
+			}), nil
+		},
+		Then: func(t *testing.T, resp interface{}, e error) {
+			collection := resp.(gollection.Collection)
+
+			assert.False(t, collection.Empty())
+			assert.Equal(t, 50, collection.Get(0).Int())
+			assert.Equal(t, 2, collection.Get(1).Int())
+			assert.Equal(t, 4, collection.Get(2).Int())
+		},
+	}.Run(t)
 }
 
 func TestCollection_Find(t *testing.T) {
@@ -149,52 +145,44 @@ func TestCollection_Find(t *testing.T) {
 }
 
 func TestCollection_ForEach(t *testing.T) {
-	testCases := []runnest.TestCase{
-		{
-			Name: "Given a collection with 3 elements When forEach is call Then apply the function for each element",
-			Given: func() interface{} {
-				return gollection.NewCollection(50.5, 53.3, 71.2)
-			},
-			When: func(req interface{}) (interface{}, error) {
-				collection := req.(gollection.Collection)
-
-				count := 0
-				collection.ForEach(func(idx int, e *gollection.Element) {
-					count++
-				})
-
-				return count, nil
-			},
-			Then: func(t *testing.T, resp interface{}, e error) {
-				count := resp.(int)
-
-				assert.Equal(t, 3, count)
-			},
+	runnest.TestCase{
+		Name: "Given a collection with 3 elements When forEach is call Then apply the function for each element",
+		Given: func() interface{} {
+			return gollection.NewCollection(50.5, 53.3, 71.2)
 		},
-	}
+		When: func(req interface{}) (interface{}, error) {
+			collection := req.(gollection.Collection)
 
-	runnest.NewRunest(t).Run(testCases)
+			count := 0
+			collection.ForEach(func(idx int, e *gollection.Element) {
+				count++
+			})
+
+			return count, nil
+		},
+		Then: func(t *testing.T, resp interface{}, e error) {
+			count := resp.(int)
+
+			assert.Equal(t, 3, count)
+		},
+	}.Run(t)
 }
 
 func TestCollection_Length(t *testing.T) {
-	testCases := []runnest.TestCase{
-		{
-			Name: "Given a collection with 3 elements When Length is call Then return 3",
-			Given: func() interface{} {
-				return gollection.NewCollection(50.5, 53.3, 71.2)
-			},
-			When: func(req interface{}) (interface{}, error) {
-				return req, nil
-			},
-			Then: func(t *testing.T, resp interface{}, e error) {
-				collection := resp.(gollection.Collection)
-
-				assert.Equal(t, 3, collection.Length())
-			},
+	runnest.TestCase{
+		Name: "Given a collection with 3 elements When Length is call Then return 3",
+		Given: func() interface{} {
+			return gollection.NewCollection(50.5, 53.3, 71.2)
 		},
-	}
+		When: func(req interface{}) (interface{}, error) {
+			return req, nil
+		},
+		Then: func(t *testing.T, resp interface{}, e error) {
+			collection := resp.(gollection.Collection)
 
-	runnest.NewRunest(t).Run(testCases)
+			assert.Equal(t, 3, collection.Length())
+		},
+	}.Run(t)
 }
 
 func TestCollection_Map(t *testing.T) {
@@ -236,36 +224,32 @@ func TestCollection_Map(t *testing.T) {
 }
 
 func TestCollection_Reduce(t *testing.T) {
-	testCases := []runnest.TestCase{
-		{
-			Name: "Given a collection with 6 elements When reduce is called Then return the reduced value",
-			Given: func() interface{} {
-				return gollection.NewCollection(50.5, 53.3, 71.2, 25, 5, 3, 2)
-			},
-			When: func(req interface{}) (interface{}, error) {
-				collection := req.(gollection.Collection)
-
-				return collection.Reduce(func(acc, e *gollection.Element) gollection.Element {
-					sum := acc.Float64()
-
-					if e.Type() == gollection.TYPE_INT {
-						sum += float64(e.Int())
-					} else {
-						sum += e.Float64()
-					}
-
-					return gollection.NewElement(sum)
-				}, gollection.NewFloat64(0)), nil
-			},
-			Then: func(t *testing.T, resp interface{}, e error) {
-				total := resp.(*gollection.Element)
-
-				assert.Equal(t, float64(210), total.Float64())
-			},
+	runnest.TestCase{
+		Name: "Given a collection with 6 elements When reduce is called Then return the reduced value",
+		Given: func() interface{} {
+			return gollection.NewCollection(50.5, 53.3, 71.2, 25, 5, 3, 2)
 		},
-	}
+		When: func(req interface{}) (interface{}, error) {
+			collection := req.(gollection.Collection)
 
-	runnest.NewRunest(t).Run(testCases)
+			return collection.Reduce(func(acc, e *gollection.Element) gollection.Element {
+				sum := acc.Float64()
+
+				if e.Type() == gollection.TYPE_INT {
+					sum += float64(e.Int())
+				} else {
+					sum += e.Float64()
+				}
+
+				return gollection.NewElement(sum)
+			}, gollection.NewFloat64(0)), nil
+		},
+		Then: func(t *testing.T, resp interface{}, e error) {
+			total := resp.(*gollection.Element)
+
+			assert.Equal(t, float64(210), total.Float64())
+		},
+	}.Run(t)
 }
 
 func TestCollection_ReverseFind(t *testing.T) {
@@ -312,32 +296,28 @@ func TestCollection_ReverseFind(t *testing.T) {
 }
 
 func TestCollection_Sort(t *testing.T) {
-	testCases := []runnest.TestCase{
-		{
-			Name: "Given a collection with 6 elements When reduce is called Then return the reduced value",
-			Given: func() interface{} {
-				return gollection.NewCollection(50.5, 53.3, 71.2, 25, 5, 3, 2)
-			},
-			When: func(req interface{}) (interface{}, error) {
-				collection := req.(gollection.Collection)
-
-				return collection.Sort(func(e1, e2 *gollection.Element) bool {
-					return (e1.Float64() > e2.Float64() && e1.Int() == e2.Int()) || (e1.Int() > e2.Int() && e1.Float64() == e2.Float64())
-				}), nil
-			},
-			Then: func(t *testing.T, resp interface{}, e error) {
-				collection := resp.(gollection.Collection)
-
-				assert.Equal(t, float64(71.2), collection.Get(0).Float64())
-				assert.Equal(t, float64(53.3), collection.Get(1).Float64())
-				assert.Equal(t, float64(50.5), collection.Get(2).Float64())
-				assert.Equal(t, 25, collection.Get(3).Int())
-				assert.Equal(t, 5, collection.Get(4).Int())
-				assert.Equal(t, 3, collection.Get(5).Int())
-				assert.Equal(t, 2, collection.Get(6).Int())
-			},
+	runnest.TestCase{
+		Name: "Given a collection with 6 elements When reduce is called Then return the reduced value",
+		Given: func() interface{} {
+			return gollection.NewCollection(50.5, 53.3, 71.2, 25, 5, 3, 2)
 		},
-	}
+		When: func(req interface{}) (interface{}, error) {
+			collection := req.(gollection.Collection)
 
-	runnest.NewRunest(t).Run(testCases)
+			return collection.Sort(func(e1, e2 *gollection.Element) bool {
+				return (e1.Float64() > e2.Float64() && e1.Int() == e2.Int()) || (e1.Int() > e2.Int() && e1.Float64() == e2.Float64())
+			}), nil
+		},
+		Then: func(t *testing.T, resp interface{}, e error) {
+			collection := resp.(gollection.Collection)
+
+			assert.Equal(t, float64(71.2), collection.Get(0).Float64())
+			assert.Equal(t, float64(53.3), collection.Get(1).Float64())
+			assert.Equal(t, float64(50.5), collection.Get(2).Float64())
+			assert.Equal(t, 25, collection.Get(3).Int())
+			assert.Equal(t, 5, collection.Get(4).Int())
+			assert.Equal(t, 3, collection.Get(5).Int())
+			assert.Equal(t, 2, collection.Get(6).Int())
+		},
+	}.Run(t)
 }

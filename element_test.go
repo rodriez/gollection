@@ -381,24 +381,20 @@ func TestElement_Bool(t *testing.T) {
 func TestElement_Value(t *testing.T) {
 	type Mock struct{}
 
-	testCases := []runnest.TestCase{
-		{
-			Name: "Given random value When The constructor is called Then the Value() method return the value",
-			Given: func() interface{} {
-				return Mock{}
-			},
-			When: func(req interface{}) (interface{}, error) {
-				return gollection.NewElement(req), nil
-			},
-			Then: func(t *testing.T, resp interface{}, e error) {
-				element := resp.(gollection.Element)
-
-				assert.Equal(t, Mock{}, element.Value())
-			},
+	runnest.TestCase{
+		Name: "Given random value When The constructor is called Then the Value() method return the value",
+		Given: func() interface{} {
+			return Mock{}
 		},
-	}
+		When: func(req interface{}) (interface{}, error) {
+			return gollection.NewElement(req), nil
+		},
+		Then: func(t *testing.T, resp interface{}, e error) {
+			element := resp.(gollection.Element)
 
-	runnest.NewRunest(t).Run(testCases)
+			assert.Equal(t, Mock{}, element.Value())
+		},
+	}.Run(t)
 }
 
 func TestElement_Fill(t *testing.T) {
