@@ -139,6 +139,136 @@ func TestCollection_Find(t *testing.T) {
 				assert.True(t, element.Bool())
 			},
 		},
+		{
+			Name: "Given a collection with elements When search for True with an offset of 3 Then return the first element that match with criteria",
+			Given: func() interface{} {
+				return gollection.NewCollection(50, true, false, "true", 4, true)
+			},
+			When: func(req interface{}) (interface{}, error) {
+				collection := req.(gollection.Collection)
+
+				return collection.Find(func(e *gollection.Element) bool {
+					return e.Bool()
+				}, 3), nil
+			},
+			Then: func(t *testing.T, resp interface{}, e error) {
+				element := resp.(*gollection.Element)
+
+				assert.True(t, element.Bool())
+			},
+		},
+		{
+			Name: "Given a collection with elements When search a non existing element offset Then return nil",
+			Given: func() interface{} {
+				return gollection.NewCollection(50, true, false, "true", 4, true)
+			},
+			When: func(req interface{}) (interface{}, error) {
+				collection := req.(gollection.Collection)
+
+				return collection.Find(func(e *gollection.Element) bool {
+					return e.String() == "fake"
+				}, 0), nil
+			},
+			Then: func(t *testing.T, resp interface{}, e error) {
+				assert.Empty(t, resp)
+			},
+		},
+	}
+
+	runnest.NewRunest(t).Run(testCases)
+}
+
+func TestCollection_BinaryFind(t *testing.T) {
+	testCases := []runnest.TestCase{
+		{
+			Name: "Given a collection with elements When search for 90 Then return the element",
+			Given: func() interface{} {
+				return gollection.NewCollection(10, 20, 30, 40, 50, 60, 70, 80, 90, 100)
+			},
+			When: func(req interface{}) (interface{}, error) {
+				collection := req.(gollection.Collection)
+
+				return collection.BinaryFind(func(e *gollection.Element) int {
+					target := 90
+					if target == e.Int() {
+						return gollection.SEARCH_END
+					} else if target > e.Int() {
+						return gollection.SEARCH_TO_RIGHT
+					} else {
+						return gollection.SEARCH_TO_LEFT
+					}
+				}), nil
+			},
+			Then: func(t *testing.T, resp interface{}, e error) {
+				element := resp.(*gollection.Element)
+
+				assert.Equal(t, 90, element.Int())
+			},
+		},
+		{
+			Name: "Given a collection with elements When search for 20 Then return the element",
+			Given: func() interface{} {
+				return gollection.NewCollection(10, 20, 30, 40, 50, 60, 70, 80, 90, 100)
+			},
+			When: func(req interface{}) (interface{}, error) {
+				collection := req.(gollection.Collection)
+
+				return collection.BinaryFind(func(e *gollection.Element) int {
+					target := 20
+					if target == e.Int() {
+						return gollection.SEARCH_END
+					} else if target > e.Int() {
+						return gollection.SEARCH_TO_RIGHT
+					} else {
+						return gollection.SEARCH_TO_LEFT
+					}
+				}), nil
+			},
+			Then: func(t *testing.T, resp interface{}, e error) {
+				element := resp.(*gollection.Element)
+
+				assert.Equal(t, 20, element.Int())
+			},
+		},
+		{
+			Name: "Given a collection with elements When criteria return an unsupported value Then return nil",
+			Given: func() interface{} {
+				return gollection.NewCollection(10, 20, 30, 40, 50, 60, 70, 80, 90, 100)
+			},
+			When: func(req interface{}) (interface{}, error) {
+				collection := req.(gollection.Collection)
+
+				return collection.BinaryFind(func(e *gollection.Element) int {
+					return 10
+				}), nil
+			},
+			Then: func(t *testing.T, resp interface{}, e error) {
+				assert.Empty(t, resp)
+			},
+		},
+		{
+			Name: "Given an empty collection When search for 90 Then return nil",
+			Given: func() interface{} {
+				return gollection.NewCollection()
+			},
+			When: func(req interface{}) (interface{}, error) {
+				collection := req.(gollection.Collection)
+
+				return collection.BinaryFind(func(e *gollection.Element) int {
+					target := 90
+					if target == e.Int() {
+						return gollection.SEARCH_END
+					} else if target > e.Int() {
+						return gollection.SEARCH_TO_RIGHT
+					} else {
+						return gollection.SEARCH_TO_LEFT
+					}
+				}), nil
+			},
+			Then: func(t *testing.T, resp interface{}, e error) {
+				assert.Empty(t, resp)
+			},
+		},
 	}
 
 	runnest.NewRunest(t).Run(testCases)
@@ -290,6 +420,22 @@ func TestCollection_ReverseFind(t *testing.T) {
 				assert.True(t, element.Bool())
 			},
 		},
+		{
+			Name: "Given a collection with elements When search a non existing element offset Then return nil",
+			Given: func() interface{} {
+				return gollection.NewCollection(50, true, false, "true", 4, true)
+			},
+			When: func(req interface{}) (interface{}, error) {
+				collection := req.(gollection.Collection)
+
+				return collection.ReverseFind(func(e *gollection.Element) bool {
+					return e.String() == "fake"
+				}, 0), nil
+			},
+			Then: func(t *testing.T, resp interface{}, e error) {
+				assert.Empty(t, resp)
+			},
+		},
 	}
 
 	runnest.NewRunest(t).Run(testCases)
@@ -297,7 +443,7 @@ func TestCollection_ReverseFind(t *testing.T) {
 
 func TestCollection_Sort(t *testing.T) {
 	runnest.TestCase{
-		Name: "Given a collection with 6 elements When reduce is called Then return the reduced value",
+		Name: "Given a collection with 6 elements When sort is called Then return the sorted collection",
 		Given: func() interface{} {
 			return gollection.NewCollection(50.5, 53.3, 71.2, 25, 5, 3, 2)
 		},
@@ -320,4 +466,78 @@ func TestCollection_Sort(t *testing.T) {
 			assert.Equal(t, 2, collection.Get(6).Int())
 		},
 	}.Run(t)
+}
+
+func TestCollection_Next(t *testing.T) {
+	testCases := []runnest.TestCase{
+		{
+			Name: "Given a collection with 3 elements When call next with an index 1 Then return the last element",
+			Given: func() interface{} {
+				return gollection.NewCollection(50, 51, 52)
+			},
+			When: func(req interface{}) (interface{}, error) {
+				collection := req.(gollection.Collection)
+
+				return collection.Next(1), nil
+			},
+			Then: func(t *testing.T, resp interface{}, e error) {
+				element := resp.(*gollection.Element)
+
+				assert.Equal(t, 52, element.Int())
+			},
+		},
+		{
+			Name: "Given a collection with 3 elements When call next with an non existing index Then return nil",
+			Given: func() interface{} {
+				return gollection.NewCollection(50, 51, 52)
+			},
+			When: func(req interface{}) (interface{}, error) {
+				collection := req.(gollection.Collection)
+
+				return collection.Next(4), nil
+			},
+			Then: func(t *testing.T, resp interface{}, e error) {
+				assert.Empty(t, resp)
+			},
+		},
+	}
+
+	runnest.NewRunest(t).Run(testCases)
+}
+
+func TestCollection_Prev(t *testing.T) {
+	testCases := []runnest.TestCase{
+		{
+			Name: "Given a collection with 3 elements When call Prev with an index 1 Then return the last element",
+			Given: func() interface{} {
+				return gollection.NewCollection(50, 51, 52)
+			},
+			When: func(req interface{}) (interface{}, error) {
+				collection := req.(gollection.Collection)
+
+				return collection.Prev(1), nil
+			},
+			Then: func(t *testing.T, resp interface{}, e error) {
+				element := resp.(*gollection.Element)
+
+				assert.Equal(t, 50, element.Int())
+			},
+		},
+		{
+			Name: "Given a collection with 3 elements When call Prev with an non existing index Then return nil",
+			Given: func() interface{} {
+				return gollection.NewCollection(50, 51, 52)
+			},
+			When: func(req interface{}) (interface{}, error) {
+				collection := req.(gollection.Collection)
+
+				return collection.Prev(-2), nil
+			},
+			Then: func(t *testing.T, resp interface{}, e error) {
+				assert.Empty(t, resp)
+			},
+		},
+	}
+
+	runnest.NewRunest(t).Run(testCases)
 }

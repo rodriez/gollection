@@ -128,3 +128,37 @@ func (col *gollection) Sort(criteria func(e1 *Element, e2 *Element) bool) Collec
 
 	return col
 }
+
+//Returns a new collection with the elements between from and to
+func (col *gollection) SubCollection(from, to int) Collection {
+	nc := gollection((*col)[from:to])
+
+	return &nc
+}
+
+//Given a ordered collection BinaryFind search and returns the first element that satisfies the criteria
+//If the collection if empty or any element in the collection satisfies the criteria returns nil
+//also if the returned sense doesn't match with any supported direction.
+//crtieria must indicates the sense of the search:
+//returns SEARCH_TO_LEFT if you want to continue searching at the bottom of the collection
+//returns SEARCH_TO_RIGHT if you want to keep looking at the top of the collection
+//returns SEARCH_END when you find what you are looking for
+func (col *gollection) BinaryFind(criteria func(*Element) int) *Element {
+	if col.Empty() {
+		return nil
+	}
+
+	half := int(col.Length() / 2)
+	e := col.Get(half)
+
+	switch criteria(e) {
+	case SEARCH_END:
+		return e
+	case SEARCH_TO_RIGHT:
+		return col.SubCollection(half, col.Length()).BinaryFind(criteria)
+	case SEARCH_TO_LEFT:
+		return col.SubCollection(0, half).BinaryFind(criteria)
+	default:
+		return nil
+	}
+}
