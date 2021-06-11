@@ -1,5 +1,11 @@
 package gollection
 
+import (
+	"errors"
+
+	"github.com/rodriez/goncu"
+)
+
 type concurrentGollection struct {
 	Collection
 	Threads int
@@ -31,73 +37,38 @@ func (cc *concurrentGollection) Add(e Element) Collection {
 
 //Return a new collection with filtered elements
 func (cc *concurrentGollection) Filter(criteria func(e *Element) bool) Collection {
-	size := cc.Length()
-	iterations, elements := cc.createChannels(size)
-	defer close(elements)
+	resp, _ := goncu.NewPool(cc.Threads).
+		DO(func(n int) (interface{}, error) {
+			if e := cc.Get(n); criteria(e) {
+				return e, nil
+			}
 
-	for i := 0; i < cc.Threads; i++ {
-		go cc.filterWorker(iterations, elements, criteria)
-	}
+			return nil, errors.New("filtered")
+		}).
+		Run(cc.Length())
 
-	cc.setIterations(iterations, size)
-	return cc.readElements(elements, size)
-}
-
-func (cc *concurrentGollection) filterWorker(iterations <-chan int, output chan<- *Element, criteria func(e *Element) bool) {
-	for i := range iterations {
-		if e := cc.Get(i); criteria(e) {
-			output <- e
-		}
-
-		output <- nil
-	}
+	return NewConcurrentCollection(cc.Threads, resp.Hits...)
 }
 
 //Return a new collection with all the elements converted
 func (cc *concurrentGollection) Map(converter func(e *Element) Element) Collection {
-	size := cc.Length()
-	iterations, elements := cc.createChannels(size)
-	defer close(elements)
+	resp, _ := goncu.NewPool(cc.Threads).
+		DO(func(n int) (interface{}, error) {
+			return converter(cc.Get(n)), nil
+		}).
+		Run(cc.Length())
 
-	for i := 0; i < cc.Threads; i++ {
-		go cc.mapWorker(iterations, elements, converter)
-	}
-
-	cc.setIterations(iterations, size)
-	return cc.readElements(elements, size)
+	return NewConcurrentCollection(cc.Threads, resp.Hits...)
 }
 
-func (cc *concurrentGollection) mapWorker(iterations <-chan int, output chan<- *Element, converter func(e *Element) Element) {
-	for i := range iterations {
-		e := cc.Get(i)
-		ne := converter(e)
-		output <- &ne
-	}
-}
-
-func (cc *concurrentGollection) createChannels(size int) (chan int, chan *Element) {
-	iterations := make(chan int, size)
-	elements := make(chan *Element, size)
-
-	return iterations, elements
-}
-
-func (cc *concurrentGollection) setIterations(iterations chan<- int, count int) {
-	for i := 0; i < count; i++ {
-		iterations <- i
-	}
-	close(iterations)
-}
-
-func (cc *concurrentGollection) readElements(elements <-chan *Element, count int) Collection {
-	col := NewConcurrentCollection(cc.Threads)
-	for i := 0; i < count; i++ {
-		if e := <-elements; e != nil {
-			col.Add(*e)
-		}
-	}
-
-	return col
+//Return a new collection with all the elements converted
+func (cc *concurrentGollection) ForEach(exec func(idx int, e *Element)) {
+	goncu.NewPool(cc.Threads).
+		DO(func(n int) (interface{}, error) {
+			exec(n, cc.Get(n))
+			return nil, nil
+		}).
+		Run(cc.Length())
 }
 
 //Returns a new collection with all the elements ordered

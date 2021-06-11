@@ -10,6 +10,31 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestConcurrentCollection_Add(t *testing.T) {
+	runnest.TestCase{
+		Name: "Given an empty collection When 8 element is added Then the collection is not empty anymore",
+		When: func(req interface{}) (interface{}, error) {
+			collection := gollection.NewConcurrentCollection(3)
+			collection.Add(gollection.NewString("Test"))
+			collection.Add(gollection.NewInt64(128))
+			collection.Add(gollection.NewInt32(127))
+			collection.Add(gollection.NewInt16(126))
+			collection.Add(gollection.NewInt8(12))
+			collection.Add(gollection.NewInt(125))
+			collection.Add(gollection.NewFloat32(12.34))
+			collection.Add(gollection.NewByte(128))
+			collection.Add(gollection.NewBool(false))
+
+			return collection, nil
+		},
+		Then: func(t *testing.T, resp interface{}, e error) {
+			collection := resp.(gollection.Collection)
+
+			assert.False(t, collection.Empty())
+		},
+	}.Run(t)
+}
+
 func TestConcurrentCollection_Filter(t *testing.T) {
 	runnest.TestCase{
 		Name: "Given a collection with integers When filter odd numbers Then get a new collection with all even integers",
@@ -88,6 +113,30 @@ func TestConcurrentCollection_Sort(t *testing.T) {
 			assert.Equal(t, 5, collection.Get(4).Int())
 			assert.Equal(t, 3, collection.Get(5).Int())
 			assert.Equal(t, 2, collection.Get(6).Int())
+		},
+	}.Run(t)
+}
+
+func TestConcurrentCollection_ForEach(t *testing.T) {
+	runnest.TestCase{
+		Name: "Given a collection with 3 elements When forEach is call Then apply the function for each element",
+		Given: func() interface{} {
+			return gollection.NewConcurrentCollection(2, 50.5, 53.3, 71.2, 25, 5, 3, 2)
+		},
+		When: func(req interface{}) (interface{}, error) {
+			collection := req.(gollection.Collection)
+
+			count := 0
+			collection.ForEach(func(idx int, e *gollection.Element) {
+				count++
+			})
+
+			return count, nil
+		},
+		Then: func(t *testing.T, resp interface{}, e error) {
+			count := resp.(int)
+
+			assert.Equal(t, 7, count)
 		},
 	}.Run(t)
 }
