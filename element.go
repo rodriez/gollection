@@ -24,6 +24,13 @@ type Element struct {
 	value interface{}
 }
 
+func Empty() Element {
+	return Element{
+		typ:   "",
+		value: nil,
+	}
+}
+
 //Return a new element
 func NewElement(e interface{}) Element {
 	return Element{
@@ -210,6 +217,11 @@ func (e Element) Bool() bool {
 //Return the element custom value
 func (e Element) Value() interface{} {
 	return e.value
+}
+
+//Return true if the element is empty
+func (e Element) ISEmpty() bool {
+	return e.value == nil
 }
 
 func (e Element) Fill(target interface{}) error {

@@ -467,3 +467,40 @@ func TestElement_Fill(t *testing.T) {
 
 	runnest.NewRunest(t).Run(testCases)
 }
+
+func TestElement_Empty(t *testing.T) {
+	testCases := []runnest.TestCase{
+		{
+			Name: "Given an empty element When IsEmpty is called Then should return true",
+			Given: func() interface{} {
+				return gollection.Empty()
+			},
+			When: func(req interface{}) (interface{}, error) {
+				e := req.(gollection.Element)
+				return e.ISEmpty(), nil
+			},
+			Then: func(t *testing.T, resp interface{}, e error) {
+				isEmpty := resp.(bool)
+
+				assert.True(t, isEmpty)
+			},
+		},
+		{
+			Name: "Given an non empty element When IsEmpty is called Then should return false",
+			Given: func() interface{} {
+				return gollection.NewString("Something")
+			},
+			When: func(req interface{}) (interface{}, error) {
+				e := req.(gollection.Element)
+				return e.ISEmpty(), nil
+			},
+			Then: func(t *testing.T, resp interface{}, e error) {
+				isEmpty := resp.(bool)
+
+				assert.False(t, isEmpty)
+			},
+		},
+	}
+
+	runnest.NewRunest(t).Run(testCases)
+}
